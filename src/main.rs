@@ -54,8 +54,8 @@ pub struct WorkerRequest {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct WorkerResponse {
-    name: String,
-    vacancies: Vec<Vacancy>
+    pub name: String,
+    pub vacancies: BTreeMap<String, i64>
 }
 
 #[tauri::command]
@@ -77,7 +77,7 @@ fn get_vacancies(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Vacancy> {
 }
 
 #[tauri::command]
-fn get_vacancies_for_worker(app: State<'_, Mutex<ManagementApp>>, worker: WorkerRequest) -> Result<BTreeMap<String, i64>, AppError> {
+fn get_vacancies_for_worker(app: State<'_, Mutex<ManagementApp>>, worker: WorkerRequest) -> Result<WorkerResponse, AppError> {
 
     let schema = app.lock().unwrap();
     let mut vacancies_coefs: BTreeMap<String, i64> = BTreeMap::default();
@@ -113,7 +113,10 @@ fn get_vacancies_for_worker(app: State<'_, Mutex<ManagementApp>>, worker: Worker
     //let schema = app.lock().unwrap();
     //let skills = schema.schema.get_vacancies().clone();
 
-    return Ok(vacancies_coefs);
+    return Ok(WorkerResponse {
+        name: worker.name,
+        vacancies: vacancies_coefs
+    });
 }
 
 fn main() {
@@ -124,4 +127,44 @@ fn main() {
         .invoke_handler(tauri::generate_handler![get_skills, get_vacancies])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    //tests::test();
+}
+
+mod tests {
+    use std::path::Path;
+    use std::sync::Mutex;
+    use tauri::{Manager, State};
+    use crate::{get_vacancies_for_worker, ManagementApp, WorkerRequest};
+
+    #[tauri::command]
+    fn get_skills_ww(app: State<'_, Mutex<ManagementApp>>) -> i64 {
+        return 2;
+    }
+
+    pub fn test() {
+
+        let app = tauri::Builder::default()
+            .setup(|app| {
+
+                println!("GFWGWGGWG");
+
+                app.manage(Mutex::new(ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap()));
+
+                let man_app = app.state::<Mutex<ManagementApp>>();
+
+                let result = get_vacancies_for_worker(man_app, WorkerRequest {
+                    name: "Олег".to_string(),
+                    skills: vec!["умный".into(), "образованный".into()],
+                });
+
+                println!("Result: {:?}", result);
+
+                Ok(())
+
+            })
+            .invoke_handler(tauri::generate_handler![get_skills_ww])
+            .run(tauri::generate_context!())
+            .expect("error while running tauri application");
+    }
 }
