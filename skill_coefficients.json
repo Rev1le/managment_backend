@@ -1,14 +1,177 @@
 {
-  "vacancies": ["уборщик", "глава", "программист"],
-  "skills": {
-    "умный": {
-        "уборщик": -8,
-        "глава": 5,
-        "программист": 7
+    "vacancies": ["Team_Lead", "QA_Engineer", "HR_Manager", "Analytic", "Manager", "Programmer", "System_Admin", "Technical_Support", "Janitor"],
+    "skills": {
+        "Ответственность": 
+            {
+                "Team_Lead": 3,
+                "Analytic": 2,
+                "System_Admin": 1
+            }
+        ,
+
+        "Коммуникабельность": 
+            {
+                "Team_Lead": 2,
+                "HR_Manager": 3,
+                "Manager": 2,
+                "Technical_Support": 3
+            }
+        ,
+
+        "Пунктуальность": 
+            {
+                "QA_Engineer": 2,
+                "Programmer": 2
+            }
+        ,
+        
+        "Внимательность": 
+            {
+                "Team_Lead": 2,
+                "QA_Engineer": 2,
+                "Analytic": 3,
+                "Programmer": 2,
+                "System_Admin": 3
+            }
+        ,
+
+        "Надёжность": 
+            {
+                "Team_Lead": 3,
+                "Analytic": 2,
+                "System_Admin": 2
+            }
+        ,
+
+        
+        "Спокойствие": 
+            {
+                "Team_Lead": 1,
+                "HR_Manager": 3,
+                "Manager": 2,
+                "Technical_Support": 3
+            }
+        ,
+
+        "Толерантность": 
+            {
+                "HR_Manager": 3,
+                "Manager": 1,
+                "Technical_Support": 2
+            }
+        ,   
+
+        
+        "Стрессоустойчивость": 
+            {
+                "Team_Lead": 2,
+                "Manager": 2,
+                "Technical_Support": 1
+            }
+        ,   
+
+        "Исполнительность": 
+            {
+                "QA_Engineer": 2,
+                "Analytic": 2,
+                "Programmer": 3,
+                "System_Admin": 3
+            }
+        ,  
+
+        
+        "Без вредных привычек": 
+            {
+                "Team_Lead": 1,
+                "QA_Engineer": 1,
+                "HR_Manager": 1,
+                "Analytic": 1,
+                "Manager": 1,
+                "Programmer": 1,
+                "System_Admin": 1,
+                "Technical_Support": 1
+            }
+        ,  
+
+        "Дисциплинированность": 
+            {
+                "HR_Manager": 3,
+                "Manager": 3,
+                "Programmer": 2,
+                "Technical_Support": 2
+            }
+        
     },
-    "образованный": {
-      "глава": 4,
-      "программист": 9
+
+    "jobs": {
+        "jobs": ["Разработка_ПО", "Консалтинг", "Системная_интеграция", "IT_аутсорсинг", "IT_обучение"],
+        "companies": {
+        "Разработка_ПО":
+            {
+                "Team_Lead": true,
+                "QA_Engineer": true,
+                "HR_Manager": true,
+                "Analytic": true,
+                "Manager": false,
+                "Programmer": true,
+                "System_Admin": false,
+                "Technical_Support": false
+            }
+        ,
+
+        "Консалтинг":
+            {
+                "Team_Lead": false,
+                "QA_Engineer": false,
+                "HR_Manager": false,
+                "Analytic": true,
+                "Manager": true,
+                "Programmer": true,
+                "System_Admin": false,
+                "Technical_Support": true
+            }    
+        ,
+
+        "Системная_интеграция":
+            {
+                "Team_Lead": true,
+                "QA_Engineer": true,
+                "HR_Manager": false,
+                "Analytic": true,
+                "Manager": true,
+                "Programmer": true,
+                "System_Admin": true,
+                "Technical_Support": false
+            }    
+        ,
+
+        "IT_аутсорсинг":
+            {
+                "Team_Lead": true,
+                "QA_Engineer": true,
+                "HR_Manager": true,
+                "Analytic": true,
+                "Manager": true,
+                "Programmer": true,
+                "System_Admin": true,
+                "Technical_Support": false   
+            }    
+        ,
+
+        "IT_обучение":
+            {
+                "Team_Lead": false,
+                "QA_Engineer": false,
+                "HR_Manager": false,
+                "Analytic": true,
+                "Manager": true,
+                "Programmer": true,
+                "System_Admin": false,
+                "Technical_Support": true   
+            }
+        }
     }
-  }
 }
+
+
+

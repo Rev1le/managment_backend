@@ -8,10 +8,10 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs::File;
 use std::path::Path;
 use std::sync::Mutex;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::State;
 use tauri::WindowUrl::App;
-use management_core::{SchemaError, CoefficientScheme, Team, Skill, Vacancy, VacancyCoefficient};
+use management_core::{SchemaError, CoefficientScheme, Team, Skill, Vacancy, VacancyCoefficient, Job};
 
 #[derive(Debug)]
 pub enum AppError {
@@ -46,7 +46,7 @@ impl ManagementApp {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkerRequest {
     name: String,
     skills: Vec<String>
@@ -77,7 +77,16 @@ fn get_vacancies(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Vacancy> {
 }
 
 #[tauri::command]
-fn get_vacancies_for_worker(app: State<'_, Mutex<ManagementApp>>, worker: WorkerRequest) -> Result<WorkerResponse, AppError> {
+fn get_jobs(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Job> {
+
+    let schema = app.lock().unwrap();
+    let jobs = schema.schema.get_jobs().clone();
+
+    return jobs;
+}
+
+#[tauri::command]
+fn get_vacancies_for_worker(app: State<'_, Mutex<ManagementApp>>, worker: WorkerRequest) -> WorkerResponse {
 
     let schema = app.lock().unwrap();
     let mut vacancies_coefs: BTreeMap<String, i64> = BTreeMap::default();
@@ -89,7 +98,7 @@ fn get_vacancies_for_worker(app: State<'_, Mutex<ManagementApp>>, worker: Worker
             .ok_or(AppError::Custom {
                 name: "Not Found".into(),
                 description: "Skill not found in schema".into()
-            })?;
+            }).unwrap();
 
         let vacancies_coef = skill_info.get_vacancies_coefficient();
 
@@ -110,13 +119,17 @@ fn get_vacancies_for_worker(app: State<'_, Mutex<ManagementApp>>, worker: Worker
 
     println!("{:?}", vacancies_coefs);
 
+    let mut vac = vacancies_coefs.clone().into_iter().collect::<Vec<(String, i64)>>();
+    vac.sort_by_key(|vac| vac.1);
+    println!("Отсорт массив: {:?}", vac);
+
     //let schema = app.lock().unwrap();
     //let skills = schema.schema.get_vacancies().clone();
 
-    return Ok(WorkerResponse {
+    return WorkerResponse {
         name: worker.name,
         vacancies: vacancies_coefs
-    });
+    };
 }
 
 fn main() {
@@ -124,7 +137,7 @@ fn main() {
         .manage(
             Mutex::new(ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap())
         )
-        .invoke_handler(tauri::generate_handler![get_skills, get_vacancies])
+        .invoke_handler(tauri::generate_handler![get_skills, get_vacancies, get_vacancies_for_worker, get_jobs])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
