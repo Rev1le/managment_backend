@@ -91,7 +91,10 @@ fn get_vacancies_for_worker(app: State<'_, Mutex<ManagementApp>>, worker: Worker
     let schema = app.lock().unwrap();
     let mut vacancies_coefs: BTreeMap<String, i64> = BTreeMap::default();
 
+    println!("{:#?}", schema.schema.get_skills());
+
     for skill in &worker.skills {
+        println!("{}", skill);
         let skill_info = schema.schema
             .get_skills()
             .get(skill)
@@ -133,22 +136,22 @@ fn get_vacancies_for_worker(app: State<'_, Mutex<ManagementApp>>, worker: Worker
 }
 
 fn main() {
-    tauri::Builder::default()
-        .manage(
-            Mutex::new(ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap())
-        )
-        .invoke_handler(tauri::generate_handler![get_skills, get_vacancies, get_vacancies_for_worker, get_jobs])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    // tauri::Builder::default()
+    //     .manage(
+    //         Mutex::new(ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap())
+    //     )
+    //     .invoke_handler(tauri::generate_handler![get_skills, get_vacancies, get_vacancies_for_worker, get_jobs])
+    //     .run(tauri::generate_context!())
+    //     .expect("error while running tauri application");
 
-    //tests::test();
+    tests::test();
 }
 
 mod tests {
     use std::path::Path;
     use std::sync::Mutex;
     use tauri::{Manager, State};
-    use crate::{get_vacancies_for_worker, ManagementApp, WorkerRequest};
+    use crate::{get_jobs, get_vacancies_for_worker, ManagementApp, WorkerRequest};
 
     #[tauri::command]
     fn get_skills_ww(app: State<'_, Mutex<ManagementApp>>) -> i64 {
@@ -166,12 +169,14 @@ mod tests {
 
                 let man_app = app.state::<Mutex<ManagementApp>>();
 
-                let result = get_vacancies_for_worker(man_app, WorkerRequest {
+                let result = get_vacancies_for_worker(man_app.clone(), WorkerRequest {
                     name: "Олег".to_string(),
-                    skills: vec!["умный".into(), "образованный".into()],
+                    skills: vec!["Надёжность".into(), "Спокойствие".into()],
                 });
 
                 println!("Result: {:?}", result);
+
+                println!("Result get_jobs: {:?}", get_jobs(man_app));
 
                 Ok(())
 

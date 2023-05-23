@@ -1,6 +1,7 @@
 #![feature(ptr_internals)]
 
 use std::{fs, io::{self, Read}, collections::{HashSet, HashMap}, hash::{Hash, Hasher}, rc::{Rc, Weak as RcWeak}, mem};
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::fs::File;
@@ -8,7 +9,7 @@ use std::io::Error;
 use std::path::Path;
 use std::ptr::Unique;
 use std::sync::{Arc, OnceLock, Weak as ArcWeak};
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use serde::ser::SerializeStruct;
 
 use serde_json::{Value, from_reader};
@@ -66,6 +67,7 @@ impl Worker {
 pub struct CoefficientScheme {
     vacancies: HashSet<Vacancy>,
     skills: HashSet<Skill>,
+    jobs: HashSet<Job>,
 }
 
 impl CoefficientScheme {
@@ -98,6 +100,7 @@ impl CoefficientScheme {
         let mut schema = Self {
             vacancies,
             skills: HashSet::default(),
+            jobs: CoefficientScheme::parse_jobs(&json["jobs"]),
         };
 
         for (skill_name, vacancies_coef) in skills {
@@ -135,6 +138,19 @@ impl CoefficientScheme {
         Ok(schema)
     }
 
+    fn parse_jobs(value: &Value) -> HashSet<Job> {
+
+        let mut jobs = HashSet::default();
+        let jobs_json = value.as_object().unwrap()["companies"].as_object().unwrap();
+
+        for job in jobs_json {
+            jobs.insert(Job(job.0.clone()));
+        }
+
+        return jobs
+
+    }
+
     // Not use pls
     pub fn delete_all_vacancies(&mut self) {
         self.vacancies.remove(&Vacancy("глава".into()));
@@ -149,6 +165,10 @@ impl CoefficientScheme {
 
     pub fn get_skills(&self) -> &HashSet<Skill> {
         &self.skills
+    }
+
+    pub fn get_jobs(&self) -> &HashSet<Job> {
+        &self.jobs
     }
 }
 
@@ -174,6 +194,18 @@ pub struct Skill {
     vacancies_coefficient: Vec<VacancyCoefficient>
 }
 
+impl Skill {
+    pub fn get_vacancies_coefficient(&self) -> &Vec<VacancyCoefficient> {
+        &self.vacancies_coefficient
+    }
+}
+
+impl Borrow<String> for Skill {
+    fn borrow(&self) -> &String {
+        &self.name
+    }
+}
+
 impl Hash for Skill {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.name.hash(state)
@@ -188,6 +220,9 @@ impl PartialEq for Skill {
 
 impl Eq for Skill {}
 
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
+pub struct Job(String);
+
 #[derive(Clone)]
 pub struct VacancyCoefficient(Unique<Vacancy>, i64);
 
@@ -199,6 +234,18 @@ impl VacancyCoefficient {
         let vacancy_ptr = v as *mut Vacancy;
 
         Self(Unique::new(vacancy_ptr).unwrap(), coefficient)
+    }
+
+    pub fn get_vacancy_name(&self) -> String {
+        let vacancy_name = unsafe {
+            self.0.as_ref().0.clone()
+        };
+
+        return vacancy_name
+    }
+
+    pub fn get_coefficient(&self) -> i64 {
+        self.1
     }
 }
 
