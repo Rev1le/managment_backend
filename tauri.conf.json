@@ -18,8 +18,7 @@
         "open": true
       },
       "window": {
-        "startDragging": true,
-        "fileDropEnabled": true
+        "startDragging": true
       }
     },
     "bundle": {
@@ -63,6 +62,7 @@
     },
     "windows": [
       {
+        "fileDropEnabled": true,
         "fullscreen": false,
         "height": 600,
         "resizable": true,
