@@ -364,7 +364,10 @@ impl Serialize for JobLevel {
             .expect("JobLevel не содержит label")
             .0
         )?;
-        s.serialize_field("children", &self.children)?;
+
+        if self.children.as_ref().unwrap().len() != 0 {
+            s.serialize_field("children", &self.children)?;
+        }
 
         s.end()
     }
