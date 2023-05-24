@@ -1,13 +1,13 @@
 {
     "vacancies": ["Team_Lead", "QA_Engineer", "HR_Manager", "Analytic", "Manager", "Programmer", "System_Admin", "Technical_Support", "Janitor"],
+
     "skills": {
         "Ответственность": 
             {
                 "Team_Lead": 3,
                 "Analytic": 2,
                 "System_Admin": 1
-            }
-        ,
+            },
 
         "Коммуникабельность": 
             {
@@ -15,15 +15,13 @@
                 "HR_Manager": 3,
                 "Manager": 2,
                 "Technical_Support": 3
-            }
-        ,
+            },
 
         "Пунктуальность": 
             {
                 "QA_Engineer": 2,
                 "Programmer": 2
-            }
-        ,
+            },
         
         "Внимательность": 
             {
@@ -32,16 +30,14 @@
                 "Analytic": 3,
                 "Programmer": 2,
                 "System_Admin": 3
-            }
-        ,
+            },
 
         "Надёжность": 
             {
                 "Team_Lead": 3,
                 "Analytic": 2,
                 "System_Admin": 2
-            }
-        ,
+            },
 
         
         "Спокойствие": 
@@ -50,16 +46,14 @@
                 "HR_Manager": 3,
                 "Manager": 2,
                 "Technical_Support": 3
-            }
-        ,
+            },
 
         "Толерантность": 
             {
                 "HR_Manager": 3,
                 "Manager": 1,
                 "Technical_Support": 2
-            }
-        ,   
+            },   
 
         
         "Стрессоустойчивость": 
@@ -67,8 +61,7 @@
                 "Team_Lead": 2,
                 "Manager": 2,
                 "Technical_Support": 1
-            }
-        ,   
+            },   
 
         "Исполнительность": 
             {
@@ -76,8 +69,7 @@
                 "Analytic": 2,
                 "Programmer": 3,
                 "System_Admin": 3
-            }
-        ,  
+            },  
 
         
         "Без вредных привычек": 
@@ -90,8 +82,7 @@
                 "Programmer": 1,
                 "System_Admin": 1,
                 "Technical_Support": 1
-            }
-        ,  
+            },  
 
         "Дисциплинированность": 
             {
@@ -102,64 +93,53 @@
             }
         
     },
-
     "jobs": {
         "jobs": ["Разработка_ПО", "Консалтинг", "Системная_интеграция", "IT_аутсорсинг", "IT_обучение"],
+
         "companies": {
-            "Разработка_ПО": {
+            "Разработка_ПО":
+            {
                 "Директор": "Team_Lead",
-                "Уборщик": "Technical_Support",
+                "Тестировщик": "QA_Engineer",
+                "Рекрутёр": "HR_Manager",
+                "Веб-аналитик": "Analytic",
+                "Программист Java": "Programmer"
             },
 
-        "Консалтинг":
+            "Консалтинг":
             {
-                "Team_Lead": false,
-                "QA_Engineer": false,
-                "HR_Manager": false,
-                "Analytic": true,
-                "Manager": true,
-                "Programmer": true,
-                "System_Admin": false,
-                "Technical_Support": true
-            }    
-        ,
+                "Ьизнес-аналитик": "Analytic",
+                "Управляющий партнёр": "Manager",
+                "Ведущий программист": "Programmer",
+                "Консультант": "Technical_Support"
+            },
 
-        "Системная_интеграция":
+            "Системная_интеграция":
             {
-                "Team_Lead": true,
-                "QA_Engineer": true,
-                "HR_Manager": false,
-                "Analytic": true,
-                "Manager": true,
-                "Programmer": true,
-                "System_Admin": true,
-                "Technical_Support": false
-            }    
-        ,
+                "Системный интегратор": "Team_Lead",
+                "Performance-тестировщик": "QA_Engineer",
+                "Дата-аналитик": "Analytic",
+                "Project менеджер": "Manager",
+                "Сетевой программист": "Programmer",
+                "Администратор сетей": "System_Admin"
+            },
 
-        "IT_аутсорсинг":
+            "IT_аутсорсинг":
             {
-                "Team_Lead": true,
-                "QA_Engineer": true,
-                "HR_Manager": true,
-                "Analytic": true,
-                "Manager": true,
-                "Programmer": true,
-                "System_Admin": true,
-                "Technical_Support": false   
-            }    
-        ,
+                "Ведущий программист": "Team_Lead",
+                "Тестировщик": "QA_Engineer",
+                "Промоутер": "HR_Manager",
+                "Системный аналитик": "Analytic",
+                "Продукт-менеджер": "Manager",
+                "Бэкенд-разработчик": "Programmer"
+            },
 
-        "IT_обучение":
+            "IT_обучение":
             {
-                "Team_Lead": false,
-                "QA_Engineer": false,
-                "HR_Manager": false,
-                "Analytic": true,
-                "Manager": true,
-                "Programmer": true,
-                "System_Admin": false,
-                "Technical_Support": true   
+                "Руководитель": "Analytic",
+                "Бухгалтер": "Manager",
+                "Педагог": "Programmer",
+                "Наставник": "Technical_Support"
             }
         }
     }
