@@ -88,6 +88,15 @@ fn get_vacancies(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Vacancy> {
 // }
 
 #[tauri::command]
+fn get_companies(app: State<'_, Mutex<ManagementApp>>) -> Vec<String> {
+
+    let schema = app.lock().unwrap();
+    let companies = schema.schema.get_companies().iter().map(|company| company.name()).cloned().collect::<Vec<String>>();
+
+    return companies;
+}
+
+#[tauri::command]
 fn get_current_company(app: State<'_, Mutex<ManagementApp>>, company_name: String) -> Option<Company> {
 
     let schema = app.lock().unwrap();
@@ -158,27 +167,27 @@ fn get_vacancies_for_worker(
 
 fn main() {
 
-    // let management_app = ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap();
-    //
-    // tauri::Builder::default()
-    //     .manage(Mutex::new(management_app))
-    //     .invoke_handler(tauri::generate_handler![
-    //         get_skills,
-    //         get_vacancies,
-    //         get_vacancies_for_worker,
-    //         get_jobs
-    //     ])
-    //     .run(tauri::generate_context!())
-    //     .expect("error while running tauri application");
+    let management_app = ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap();
 
-    tests::test();
+    tauri::Builder::default()
+        .manage(Mutex::new(management_app))
+        .invoke_handler(tauri::generate_handler![
+            get_skills,
+            get_vacancies,
+            get_vacancies_for_worker,
+            get_jobs
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+
+    //tests::test();
 }
 
 mod tests {
     use std::path::Path;
     use std::sync::Mutex;
     use tauri::{Manager, State};
-    use crate::{get_current_company, get_vacancies_for_worker, ManagementApp, WorkerRequest};
+    use crate::{get_companies, get_current_company, get_vacancies_for_worker, ManagementApp, WorkerRequest};
 
     #[tauri::command]
     fn get_skills_ww(app: State<'_, Mutex<ManagementApp>>) -> i64 {
@@ -203,8 +212,8 @@ mod tests {
                 //
                 // println!("Result: {:?}", result);
 
-                println!("Result get_jobs: {:?}", serde_json::to_string(&get_current_company(man_app, "Разработка_ПО".into())));
-
+                //println!("Result get_jobs: {:?}", serde_json::to_string(&get_current_company(man_app, "Разработка_ПО".into())));
+                println!("Result get_jobs: {:?}", serde_json::to_string(&get_companies(man_app)));
                 Ok(())
 
             })

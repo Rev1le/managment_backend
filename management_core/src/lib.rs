@@ -376,6 +376,12 @@ pub struct Company {
     tree: JobLevel
 }
 
+impl Company {
+    pub fn name(&self) -> &String {
+        &self.name
+    }
+}
+
 impl Hash for Company {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.name.hash(state)
