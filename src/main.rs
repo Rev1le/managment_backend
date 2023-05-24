@@ -175,7 +175,8 @@ fn main() {
             get_skills,
             get_vacancies,
             get_vacancies_for_worker,
-            get_jobs
+            get_companies,
+            get_current_company
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
