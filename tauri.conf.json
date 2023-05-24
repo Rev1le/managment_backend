@@ -62,7 +62,7 @@
     },
     "windows": [
       {
-        "fileDropEnabled": true,
+        "fileDropEnabled": false,
         "fullscreen": false,
         "height": 600,
         "resizable": true,
