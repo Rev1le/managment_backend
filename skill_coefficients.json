@@ -106,18 +106,10 @@
     "jobs": {
         "jobs": ["Разработка_ПО", "Консалтинг", "Системная_интеграция", "IT_аутсорсинг", "IT_обучение"],
         "companies": {
-        "Разработка_ПО":
-            {
-                "Team_Lead": true,
-                "QA_Engineer": true,
-                "HR_Manager": true,
-                "Analytic": true,
-                "Manager": false,
-                "Programmer": true,
-                "System_Admin": false,
-                "Technical_Support": false
-            }
-        ,
+            "Разработка_ПО": {
+                "Директор": "Team_Lead",
+                "Уборщик": "Technical_Support",
+            },
 
         "Консалтинг":
             {
