@@ -365,8 +365,8 @@ impl Serialize for JobLevel {
             .0
         )?;
 
-        if self.children.as_ref().unwrap().len() != 0 {
-            s.serialize_field("children", &self.children)?;
+        if let Some(children) = &self.children {
+            s.serialize_field("children", children)?;
         }
 
         s.end()

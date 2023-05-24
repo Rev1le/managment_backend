@@ -169,21 +169,21 @@ fn get_vacancies_for_worker(
 
 fn main() {
 
-    // let management_app = ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap();
-    //
-    // tauri::Builder::default()
-    //     .manage(Mutex::new(management_app))
-    //     .invoke_handler(tauri::generate_handler![
-    //         get_skills,
-    //         get_vacancies,
-    //         get_vacancies_for_worker,
-    //         get_companies,
-    //         get_current_company
-    //     ])
-    //     .run(tauri::generate_context!())
-    //     .expect("error while running tauri application");
+    let management_app = ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap();
 
-    tests::test();
+    tauri::Builder::default()
+        .manage(Mutex::new(management_app))
+        .invoke_handler(tauri::generate_handler![
+            get_skills,
+            get_vacancies,
+            get_vacancies_for_worker,
+            get_companies,
+            get_current_company
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+
+    // tests::test();
 }
 
 mod tests {
