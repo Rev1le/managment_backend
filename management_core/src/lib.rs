@@ -1,6 +1,7 @@
 #![feature(ptr_internals)]
 
 use std::{fs, io::{self, Read}, collections::{HashSet, HashMap}, hash::{Hash, Hasher}, rc::{Rc, Weak as RcWeak}, mem};
+use std::arch::x86_64::CpuidResult;
 use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
@@ -67,7 +68,8 @@ impl Worker {
 pub struct CoefficientScheme {
     vacancies: HashSet<Vacancy>,
     skills: HashSet<Skill>,
-    jobs: HashSet<Job>,
+    //jobs: HashSet<Job>,
+    companies: HashSet<Company>,
 }
 
 impl CoefficientScheme {
@@ -91,7 +93,16 @@ impl CoefficientScheme {
             CoefficientScheme::parse_jobs(&json["jobs"]);
         println!("Успешных парсинг работ\n------------");
 
-        return Ok(Self { vacancies, skills, jobs });
+        let companies =
+            CoefficientScheme::parse_companies(&json["jobs"]["companies"]);
+        println!("Успешных парсинг компаний\n------------");
+
+        return Ok(Self {
+            vacancies,
+            skills,
+            //jobs,
+            companies
+        });
     }
 
     fn parse_vacancies(value: &Value) -> HashSet<Vacancy> {
@@ -164,8 +175,34 @@ impl CoefficientScheme {
 
         return jobs_map
             .into_iter()
-            .map(|job| Job(job.0.into()))
+            .map(|job| {
+                //println!("{}", job.1);
+                //let job_graph = dbg!(serde_json::from_value::<JobLevel>(job.1.clone()).unwrap());
+                Job(job.0.into())
+            })
             .collect::<HashSet<Job>>();
+    }
+
+    fn parse_companies(value: &Value) -> HashSet<Company> {
+
+        let companies_map = value
+            .as_object()
+            .expect("json конфиг не содержит объекта в поле 'companies'");
+
+        return companies_map
+            .into_iter()
+            .map(|company| {
+                //println!("{}", job.1);
+                let company_graph = dbg!(
+                    serde_json::from_value::<JobLevel>(company.1.clone())
+                        .unwrap()
+                );
+                Company {
+                    name: company.0.into(),
+                    tree: company_graph
+                }
+            })
+            .collect::<HashSet<Company>>();
     }
 
     // Not use pls
@@ -184,8 +221,12 @@ impl CoefficientScheme {
         &self.skills
     }
 
-    pub fn get_jobs(&self) -> &HashSet<Job> {
-        &self.jobs
+    // pub fn get_jobs(&self) -> &HashSet<Job> {
+    //     &self.jobs
+    // }
+
+    pub fn get_companies(&self) -> &HashSet<Company> {
+        &self.companies
     }
 }
 
@@ -237,8 +278,23 @@ impl PartialEq for Skill {
 
 impl Eq for Skill {}
 
-#[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct Job(String);
+
+// impl Hash for Job {
+//     fn hash<H: Hasher>(&self, state: &mut H) {
+//         self.0.hash(state)
+//     }
+// }
+//
+// impl PartialEq for Job {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.0.eq(&other.0)
+//     }
+// }
+//
+// impl Eq for Job {}
+
 
 #[derive(Clone)]
 pub struct VacancyCoefficient(Unique<Vacancy>, i64);
@@ -287,6 +343,56 @@ impl Serialize for VacancyCoefficient {
         s.serialize_field("vacancy", &vacancy)?;
         s.serialize_field("coefficient", &self.1)?;
         s.end()
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct JobLevel {
+    label: HashMap<String, String>,
+    children: Option<Vec<JobLevel>>
+}
+
+impl Serialize for JobLevel {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+
+        let mut s = serializer
+            .serialize_struct("JobLevel", 2)?;
+
+        s.serialize_field("label", &self.label
+            .iter()
+            .next()
+            .expect("JobLevel не содержит label")
+            .0
+        )?;
+        s.serialize_field("children", &self.children)?;
+
+        s.end()
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Company {
+    name: String,
+    tree: JobLevel
+}
+
+impl Hash for Company {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state)
+    }
+}
+
+impl PartialEq for Company {
+    fn eq(&self, other: &Self) -> bool {
+        self.name.eq(&other.name)
+    }
+}
+
+impl Eq for Company {}
+
+impl Borrow<String> for Company {
+    fn borrow(&self) -> &String {
+        &self.name
     }
 }
 

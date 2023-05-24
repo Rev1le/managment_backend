@@ -99,47 +99,95 @@
         "companies": {
             "Разработка_ПО":
             {
-                "Директор": "Team_Lead",
-                "Тестировщик": "QA_Engineer",
-                "Рекрутёр": "HR_Manager",
-                "Веб-аналитик": "Analytic",
-                "Программист Java": "Programmer"
+                "label": {
+                    "Директор": "Team_Lead"
+                },
+                "children": [
+                    {
+                        "label": {
+                            "Тестировщик": "QA_Engineer"
+                        },
+                        "children": [
+                            {
+                                "label": {
+                                    "Рекрутёр": "HR_Manager"
+                                }
+                            },
+                            {
+                                "label": {
+                                    "Веб-аналитик": "Analytic"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "label": {
+                            "Программист Java": "Programmer"
+                        }
+                    }
+                ]
             },
 
             "Консалтинг":
             {
-                "Ьизнес-аналитик": "Analytic",
-                "Управляющий партнёр": "Manager",
-                "Ведущий программист": "Programmer",
-                "Консультант": "Technical_Support"
+                "label": {
+                    "Ьизнес-аналитик": "Analytic"
+                },
+                "children": [
+                    {
+                        "label": {
+                            "Управляющий партнёр": "Manager"
+                        }
+                    },
+                    {
+                        "label": {
+                            "Ведущий программист": "Programmer"
+                        }
+                    },
+                    {
+                        "label": {
+                            "Консультант": "Technical_Support"
+                        }
+                    }
+                ]
             },
 
             "Системная_интеграция":
             {
-                "Системный интегратор": "Team_Lead",
-                "Performance-тестировщик": "QA_Engineer",
-                "Дата-аналитик": "Analytic",
-                "Project менеджер": "Manager",
-                "Сетевой программист": "Programmer",
-                "Администратор сетей": "System_Admin"
-            },
-
-            "IT_аутсорсинг":
-            {
-                "Ведущий программист": "Team_Lead",
-                "Тестировщик": "QA_Engineer",
-                "Промоутер": "HR_Manager",
-                "Системный аналитик": "Analytic",
-                "Продукт-менеджер": "Manager",
-                "Бэкенд-разработчик": "Programmer"
-            },
-
-            "IT_обучение":
-            {
-                "Руководитель": "Analytic",
-                "Бухгалтер": "Manager",
-                "Педагог": "Programmer",
-                "Наставник": "Technical_Support"
+                "label": {
+                    "Системный интегратор": "Team_Lead"
+                },
+                "children": [
+                    {
+                        "label": {
+                            "Performance-тестировщик": "QA_Engineer"
+                        },
+                        "children": [
+                            {
+                                "label": {
+                                    "Дата-аналитик": "Analytic"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "label": {
+                            "Project менеджер": "Manager"
+                        },
+                        "children": [
+                            {
+                                "label": {
+                                    "Сетевой программист": "Programmer"
+                                }
+                            },
+                            {
+                                "label": {
+                                    "Администратор сетей": "System_Admin"
+                                }
+                            }
+                        ]
+                    }
+                ]
             }
         }
     }
