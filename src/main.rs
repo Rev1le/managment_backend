@@ -9,6 +9,7 @@ use std::fs::File;
 use std::path::Path;
 use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use tauri::State;
 use tauri::WindowUrl::App;
 use management_core::{SchemaError, CoefficientScheme, Team, Skill, Vacancy, VacancyCoefficient, Job, Company};
@@ -58,6 +59,12 @@ pub struct WorkerResponse {
     pub vacancies: BTreeMap<String, i64>
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlacementRequest {
+    company_name: String,
+    placements: HashMap<String, Value>
+}
+
 #[tauri::command]
 fn get_skills(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Skill> {
 
@@ -76,6 +83,41 @@ fn get_vacancies(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Vacancy> {
     println!("Возвращены должности\n------------");
 
     return vacancies;
+}
+
+#[tauri::command]
+fn check_placement(app: State<'_, Mutex<ManagementApp>>, data: PlacementRequest) -> bool {
+
+    let schema = &app.lock().unwrap().schema;
+    let current_company_opt = schema.get_companies().get(&data.company_name);
+
+    if let Some(current_company) = current_company_opt {
+        let tree = current_company.tree();
+        let mut percentage_correctness = 0;
+        let mut all_percentage = 0;
+
+
+        for label in tree.get_iter() {
+            let vacancy_name = label.label().keys().next().unwrap();
+            let request_data_vacancies = data.placements.get(vacancy_name).unwrap().as_object().unwrap();
+            let best_vacancy = request_data_vacancies["vacancies"].as_array().unwrap()[0].as_str().unwrap();
+
+            if best_vacancy == label.label().keys().next().unwrap() {
+                percentage_correctness += 1;
+            }
+            all_percentage += 1;
+
+            println!("{:?} -- {:?}", label.label(), data.placements.get(label.label().keys().next().unwrap()));
+        }
+
+        println!("{} {}", percentage_correctness, all_percentage);
+
+        if percentage_correctness / all_percentage >= 0 {
+            return true
+        }
+    }
+
+    return false
 }
 
 // #[tauri::command]
@@ -169,28 +211,28 @@ fn get_vacancies_for_worker(
 
 fn main() {
 
-    let management_app = ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap();
+    // let management_app = ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap();
+    //
+    // tauri::Builder::default()
+    //     .manage(Mutex::new(management_app))
+    //     .invoke_handler(tauri::generate_handler![
+    //         get_skills,
+    //         get_vacancies,
+    //         get_vacancies_for_worker,
+    //         get_companies,
+    //         get_current_company
+    //     ])
+    //     .run(tauri::generate_context!())
+    //     .expect("error while running tauri application");
 
-    tauri::Builder::default()
-        .manage(Mutex::new(management_app))
-        .invoke_handler(tauri::generate_handler![
-            get_skills,
-            get_vacancies,
-            get_vacancies_for_worker,
-            get_companies,
-            get_current_company
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-
-    // tests::test();
+    tests::test();
 }
 
 mod tests {
     use std::path::Path;
     use std::sync::Mutex;
     use tauri::{Manager, State};
-    use crate::{get_companies, get_current_company, get_vacancies_for_worker, ManagementApp, WorkerRequest};
+    use crate::{check_placement, get_companies, get_current_company, get_vacancies_for_worker, ManagementApp, PlacementRequest, WorkerRequest};
 
     #[tauri::command]
     fn get_skills_ww(app: State<'_, Mutex<ManagementApp>>) -> i64 {
@@ -216,7 +258,24 @@ mod tests {
                 // println!("Result: {:?}", result);
 
                 //println!("Result get_jobs: {:?}", serde_json::to_string(&get_current_company(man_app, "Разработка_ПО".into())));
-                println!("Result get_jobs: {:?}", serde_json::to_string(&get_companies(man_app)));
+                //println!("Result get_jobs: {:?}", serde_json::to_string(&get_companies(man_app.clone())));
+                // println!(
+                //     "Result get_jobs: {:?}",
+                //     serde_json::to_string(
+                //         &get_current_company(
+                //             man_app,
+                //             "Системная_интеграция".into()
+                //         )
+                //     )
+                // );
+
+                let json = r#"{"company_name":"Консалтинг","placements":{"Ьизнес-аналитик":{"name":"jrwj","qualities":["Пунктуальность","Спокойствие"],"id":4,"vacancies":["Ьизнес-аналитик","Technical_Support","Manager","Programmer","QA_Engineer","Team_Lead"]},"Управляющий партнёр":{"name":"j","qualities":["Исполнительность","Ответственность"],"id":1,"vacancies":["Analytic","System_Admin","Programmer","Team_Lead","QA_Engineer"]},"Ведущий программист":{"name":"t","qualities":["Внимательность","Исполнительность"],"id":0,"vacancies":["System_Admin","Analytic","Programmer","QA_Engineer","Team_Lead"]},"Консультант":{"name":"jrwj","qualities":["Пунктуальность","Спокойствие"],"id":4,"vacancies":["HR_Manager","Technical_Support","Manager","Programmer","QA_Engineer","Team_Lead"]}}}"#;
+                let placement = serde_json::from_str::<PlacementRequest>(json).unwrap();
+
+                println!(
+                    "Result get_jobs: {:?}",
+                    serde_json::to_string(&check_placement(man_app, placement, ))
+                );
                 Ok(())
 
             })

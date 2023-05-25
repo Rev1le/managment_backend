@@ -7,9 +7,12 @@ use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::fs::File;
 use std::io::Error;
+use std::iter::Map;
 use std::path::Path;
 use std::ptr::Unique;
+use std::slice::Iter;
 use std::sync::{Arc, OnceLock, Weak as ArcWeak};
+use std::vec::IntoIter;
 use serde::{Deserialize, Serialize, Serializer};
 use serde::ser::SerializeStruct;
 
@@ -349,8 +352,30 @@ impl Serialize for VacancyCoefficient {
 #[derive(Debug, Clone, Deserialize)]
 pub struct JobLevel {
     label: HashMap<String, String>,
-    children: Option<Vec<JobLevel>>
+    children: Option<Vec<JobLevel>>,
 }
+
+impl JobLevel {
+    pub fn label(&self) -> &HashMap<String, String> {
+        &self.label
+    }
+
+    pub fn get_iter(&self) -> Vec<JobLevel> {
+        let mut v_all_children = vec![];
+        v_all_children.push(self.clone());
+
+        if let Some(levels) = &self.children {
+            for level in levels {
+                let tmp_levels = level.get_iter();
+                v_all_children.extend_from_slice(&tmp_levels);
+            }
+        }
+
+        return v_all_children
+    }
+
+}
+
 
 impl Serialize for JobLevel {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
@@ -373,6 +398,24 @@ impl Serialize for JobLevel {
     }
 }
 
+impl IntoIterator for JobLevel {
+    type Item = JobLevel;
+    type IntoIter = IntoIter<JobLevel>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let self_cl = self.clone();
+
+        if let Some(levels) = self.children {
+
+            let children_iter = levels.into_iter();
+            //levels.push(self_cl);
+            return [self_cl.into_iter(), children_iter].into_iter().flatten().collect::<Vec<JobLevel>>().into_iter()
+        }
+
+        Vec::new().into_iter()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Company {
     name: String,
@@ -382,6 +425,9 @@ pub struct Company {
 impl Company {
     pub fn name(&self) -> &String {
         &self.name
+    }
+    pub fn tree(&self) -> &JobLevel {
+        &self.tree
     }
 }
 
@@ -404,7 +450,6 @@ impl Borrow<String> for Company {
         &self.name
     }
 }
-
 
 #[cfg(test)]
 mod tests {
