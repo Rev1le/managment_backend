@@ -3,6 +3,7 @@
     windows_subsystem = "windows"
 )]
 
+
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs::File;
@@ -12,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::State;
 use tauri::WindowUrl::App;
-use management_core::{SchemaError, CoefficientScheme, Team, Skill, Vacancy, VacancyCoefficient, Job, Company};
+use management_core::{SchemaError, CoefficientScheme, Team, Skill, Vacancy, VacancyCoefficient, Job, Company, JobLevel};
 
 #[derive(Debug)]
 pub enum AppError {
@@ -86,28 +87,119 @@ fn get_vacancies(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Vacancy> {
 }
 
 #[tauri::command]
-fn check_placement(app: State<'_, Mutex<ManagementApp>>, data: PlacementRequest) -> bool {
+fn check_placement(app: State<'_, Mutex<ManagementApp>>, data: PlacementRequest) -> f64 {
 
     let schema = &app.lock().unwrap().schema;
-    let current_company_opt = schema.get_companies().get(&data.company_name);
+    let current_company_opt = schema
+        .get_companies()
+        .get(&data.company_name);
+
+    let company;
 
     if let Some(current_company) = current_company_opt {
-        let tree = current_company.tree();
+        company = current_company.clone();
+    } else {
+        return 0.0
+    }
+    println!("{:?}", company);
+
+    let vacancies_tree = company.tree();
+    let vacancies_vec = vacancies_tree
+        .get_iter()
+        .collect::<Vec<JobLevel>>();
+
+    let mut percentage_correctness: f64 = 0.0;
+    let mut all_percentage: f64 = 0.0;
+
+    for job_level in vacancies_vec {
+
+        let (company_vacancy_name, target_vacancy_name) = job_level.label().iter().next().unwrap();
+        let worker_data = data.placements.get(company_vacancy_name).unwrap_or(&Value::Null);
+
+        if *worker_data == Value::Null {
+            println!("Должность {} не проставлена на графе и не найдена в RequestData", company_vacancy_name);
+            continue
+        }
+
+        let worker_vacancies_top = worker_data["vacancies"].as_array().unwrap();
+
+        worker_vacancies_top.iter().enumerate().map(|(ind, vacancy)| {
+
+            println!("{} ?==? {}\n", vacancy, target_vacancy_name);
+            let vacancy = vacancy.as_str().unwrap();
+            if vacancy == target_vacancy_name {
+                percentage_correctness += 1.0/(1.0+ind as f64);
+                println!("{}", percentage_correctness);
+            }
+        }).for_each(drop);
+
+        all_percentage += 1.0;
+
+        println!("Company vacancy name: {}, target vacancy name: {}. Worker top vacancies: {:?}", company_vacancy_name, target_vacancy_name, worker_vacancies_top);
+
+    }
+
+    println!("{} / {}", percentage_correctness, all_percentage);
+
+    return percentage_correctness / all_percentage;
+
+
+/*
+
+        if let Some(current_company) = current_company_opt {
+        let vacancies_tree = current_company.tree();
+
         let mut percentage_correctness = 0;
         let mut all_percentage = 0;
 
+        for target_vacancy in vacancies_tree.get_iter() {
 
-        for label in tree.get_iter() {
-            let vacancy_name = label.label().keys().next().unwrap();
-            let request_data_vacancies = data.placements.get(vacancy_name).unwrap().as_object().unwrap();
-            let best_vacancy = request_data_vacancies["vacancies"].as_array().unwrap()[0].as_str().unwrap();
+            let (target_vacancy_name, company_vacancy_name) = target_vacancy.label().iter().next().unwrap();
 
-            if best_vacancy == label.label().keys().next().unwrap() {
-                percentage_correctness += 1;
+            let request_vacancy_company_data = data.placements
+                .get(company_vacancy_name).unwrap_or(&Value::Null);
+
+            if request_vacancy_company_data == Value::Null {
+                println!("Должность {} не найдена в RequestData", company_vacancy_name);
+                continue
             }
+
+            let (request_vacancy_company_name, worker_data) = request_vacancy_company_data
+                .as_object()
+                .unwrap()
+                .iter()
+                .next()
+                .expect(&format!(
+                    "Должность {} не явялется валидной. Debug: {:?}",
+                    company_vacancy_name,
+                    request_vacancy_data)
+                );
+            let worker_vacancies_top = worker_data["vacancies"].as_array().unwrap();
+
+            let vacancy_name = target_vacancy.label().keys().next().unwrap();
+            let request_data_vacancies = data.placements.get(vacancy_name).unwrap().as_object().unwrap();
+
+            let request_vacancies = request_data_vacancies["vacancies"].as_array().unwrap();
+
+            for i in 0..=2 {
+                let best_vacancy = &request_vacancies[i];
+
+                if best_vacancy == label.label().values().next().unwrap() {
+                    percentage_correctness += 1/(1+i);
+                    break
+                }
+            }
+
             all_percentage += 1;
 
-            println!("{:?} -- {:?}", label.label(), data.placements.get(label.label().keys().next().unwrap()));
+            // let best_vacancy = request_data_vacancies["vacancies"].as_array().unwrap()[0].as_str().unwrap();
+            //
+            // if best_vacancy == label.label().keys().next().unwrap() {
+            //     percentage_correctness += 1;
+            // }
+            // all_percentage += 1;
+
+            println!("{:?} -- {:#?}", label.label(), data);
         }
 
         println!("{} {}", percentage_correctness, all_percentage);
@@ -118,6 +210,8 @@ fn check_placement(app: State<'_, Mutex<ManagementApp>>, data: PlacementRequest)
     }
 
     return false
+
+ */
 }
 
 // #[tauri::command]
@@ -211,21 +305,21 @@ fn get_vacancies_for_worker(
 
 fn main() {
 
-    // let management_app = ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap();
-    //
-    // tauri::Builder::default()
-    //     .manage(Mutex::new(management_app))
-    //     .invoke_handler(tauri::generate_handler![
-    //         get_skills,
-    //         get_vacancies,
-    //         get_vacancies_for_worker,
-    //         get_companies,
-    //         get_current_company
-    //     ])
-    //     .run(tauri::generate_context!())
-    //     .expect("error while running tauri application");
+    let management_app = ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap();
 
-    tests::test();
+    tauri::Builder::default()
+        .manage(Mutex::new(management_app))
+        .invoke_handler(tauri::generate_handler![
+            get_skills,
+            get_vacancies,
+            get_vacancies_for_worker,
+            get_companies,
+            get_current_company
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+
+    //tests::test();
 }
 
 mod tests {
@@ -269,7 +363,7 @@ mod tests {
                 //     )
                 // );
 
-                let json = r#"{"company_name":"Консалтинг","placements":{"Ьизнес-аналитик":{"name":"jrwj","qualities":["Пунктуальность","Спокойствие"],"id":4,"vacancies":["Ьизнес-аналитик","Technical_Support","Manager","Programmer","QA_Engineer","Team_Lead"]},"Управляющий партнёр":{"name":"j","qualities":["Исполнительность","Ответственность"],"id":1,"vacancies":["Analytic","System_Admin","Programmer","Team_Lead","QA_Engineer"]},"Ведущий программист":{"name":"t","qualities":["Внимательность","Исполнительность"],"id":0,"vacancies":["System_Admin","Analytic","Programmer","QA_Engineer","Team_Lead"]},"Консультант":{"name":"jrwj","qualities":["Пунктуальность","Спокойствие"],"id":4,"vacancies":["HR_Manager","Technical_Support","Manager","Programmer","QA_Engineer","Team_Lead"]}}}"#;
+                let json = r#"{"company_name":"Консалтинг","placements":{"Ьизнес-аналитик":{"name":"jrwj","qualities":["Пунктуальность","Спокойствие"],"id":4,"vacancies":["Analytic","Technical_Support","Manager","Programmer","QA_Engineer","Team_Lead"]},"Управляющий партнёр":{"name":"j","qualities":["Исполнительность","Ответственность"],"id":1,"vacancies":["Analytic","Manager","Programmer","Team_Lead","QA_Engineer"]},"Ведущий программист":{"name":"t","qualities":["Внимательность","Исполнительность"],"id":0,"vacancies":["System_Admin","Analytic","Programmer","QA_Engineer","Team_Lead"]},"Консультант":{"name":"jrwj","qualities":["Пунктуальность","Спокойствие"],"id":4,"vacancies":["HR_Manager","Technical_Support","Manager","Programmer","QA_Engineer","Team_Lead"]}}}"#;
                 let placement = serde_json::from_str::<PlacementRequest>(json).unwrap();
 
                 println!(

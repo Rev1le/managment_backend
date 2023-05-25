@@ -360,18 +360,18 @@ impl JobLevel {
         &self.label
     }
 
-    pub fn get_iter(&self) -> Vec<JobLevel> {
+    pub fn get_iter(&self) -> IntoIter<JobLevel> {
         let mut v_all_children = vec![];
         v_all_children.push(self.clone());
 
         if let Some(levels) = &self.children {
             for level in levels {
                 let tmp_levels = level.get_iter();
-                v_all_children.extend_from_slice(&tmp_levels);
+                v_all_children.extend(tmp_levels);
             }
         }
 
-        return v_all_children
+        return v_all_children.into_iter()
     }
 
 }
@@ -415,6 +415,7 @@ impl IntoIterator for JobLevel {
         Vec::new().into_iter()
     }
 }
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Company {
