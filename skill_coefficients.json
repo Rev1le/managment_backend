@@ -93,79 +93,84 @@
             }
         
     },
+
+
     "jobs": {
+        
         "jobs": ["Разработка_ПО", "Консалтинг", "Системная_интеграция", "IT_аутсорсинг", "IT_обучение"],
 
         "companies": {
             "Разработка_ПО":
-            {
-                "label": {
-                    "Директор": "Team_Lead"
-                },
-                "children": [
-                    {
-                        "label": {
-                            "Тестировщик": "QA_Engineer"
-                        },
-                        "children": [
-                            {
-                                "label": {
-                                    "Рекрутёр": "HR_Manager"
-                                }
+                {
+                    "label": {
+                        "Директор": "Team_Lead"
+                    },
+                    "children": [
+                        {
+                            "label": {
+                                "Веб-аналитик": "QA_Engineer"
                             },
-                            {
-                                "label": {
-                                    "Веб-аналитик": "Analytic"
+                            "children": [
+                                {
+                                    "label": {
+                                        "Рекрутёр": "HR_Manager"
+                                    }
+                                },
+                                {
+                                    "label": {
+                                        "Тестировщик": "Analytic"
+                                    }
                                 }
+                            ]
+                        },
+                        {
+                            "label": {
+                                "Программист Java": "Programmer"
                             }
-                        ]
-                    },
-                    {
-                        "label": {
-                            "Программист Java": "Programmer"
                         }
-                    }
-                ]
-            },
-
-            "Консалтинг":
-            {
-                "label": {
-                    "Ьизнес-аналитик": "Analytic"
+                    ]
                 },
-                "children": [
-                    {
-                        "label": {
-                            "Управляющий партнёр": "Manager"
-                        }
+    
+            "Консалтинг": 
+                {
+                    "label": {
+                        "Бизнес-аналитик": "Analytic"
                     },
-                    {
-                        "label": {
-                            "Ведущий программист": "Programmer"
+                    "children": [
+                        {
+                            "label": {
+                                "Управляющий партнёр": "Manager"
+                            },
+                            "children": [
+                                {
+                                    "label": {
+                                        "Консультант": "Technical_Support"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "label": {
+                                "Ведущий программист": "Programmer"
+                            }
                         }
-                    },
-                    {
-                        "label": {
-                            "Консультант": "Technical_Support"
-                        }
-                    }
-                ]
-            },
-
-            "Системная_интеграция":
-            {
+                    ]
+                },
+    
+    
+            "Системная_интеграция": {
                 "label": {
                     "Системный интегратор": "Team_Lead"
                 },
                 "children": [
                     {
                         "label": {
-                            "Performance-тестировщик": "QA_Engineer"
+                            "Администратор сетей": "System_Admin"
                         },
                         "children": [
                             {
                                 "label": {
-                                    "Дата-аналитик": "Analytic"
+                                    "Сетевой программист": "Programmer"
                                 }
                             }
                         ]
@@ -176,13 +181,77 @@
                         },
                         "children": [
                             {
-                                "label": {
-                                    "Сетевой программист": "Programmer"
+                                "label":{
+                                    "Performance-тестировщик": "QA_Engineer"
                                 }
-                            },
+                            }
+                        ]
+                    },
+                    {
+                        "label": {
+                            "Дата-аналитик": "Analytic"
+                        }
+                    }
+                ]
+            },
+    
+    
+            "IT_аутсорсинг": {
+                "label":{
+                    "Ведущий программист": "Team_Lead"
+                },
+                "children": [
+                    {
+                        "label":{
+                            "Бэкенд-разработчик": "Programmer"
+                        },
+                        "children": [
                             {
-                                "label": {
-                                    "Администратор сетей": "System_Admin"
+                                "label":{
+                                    "Тестировщик": "QA_Engineer"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "label":{
+                            "Продукт-менеджер": "Manager"
+                        },
+                        "children":[
+                            {
+                                "label":{
+                                    "Промоутер": "HR_Manager"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "label":{
+                            "Системный аналитик": "Analytic"
+                        }
+                    }
+                ]
+            },
+        
+    
+            "IT_обучение":{
+                "label":{
+                    "Руководитель": "Analytic"
+                },
+                "children":[
+                    {
+                        "label":{
+                            "Бухгалтер": "Manager"
+                        }
+                    },
+                    {
+                        "label":{
+                            "Педагог": "Programmer"
+                        },
+                        "children":[
+                            {
+                                "label":{
+                                    "Наставник": "Technical_Support"
                                 }
                             }
                         ]
@@ -191,6 +260,11 @@
             }
         }
     }
+
+
+
+
+    
 }
 
 
