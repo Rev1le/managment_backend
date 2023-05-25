@@ -314,6 +314,7 @@ fn main() {
             get_vacancies,
             get_vacancies_for_worker,
             get_companies,
+            check_placement,
             get_current_company
         ])
         .run(tauri::generate_context!())
