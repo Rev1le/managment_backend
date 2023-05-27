@@ -102,7 +102,8 @@ impl CoefficientScheme {
             CoefficientScheme::parse_companies(&json["jobs"]["companies"]);
         println!("Успешных парсинг компаний\n------------");
 
-        let questions = dbg!(CoefficientScheme::parse_questions(&json["questions"]));
+        let questions =
+            CoefficientScheme::parse_questions(&json["questions"]);
         println!("Успешных парсинг вопросов------------");
 
         return Ok(Self {
@@ -240,6 +241,10 @@ impl CoefficientScheme {
 
     pub fn get_companies(&self) -> &HashSet<Company> {
         &self.companies
+    }
+
+    pub fn get_questions(&self) -> &HashSet<Question> {
+        &self.questions
     }
 }
 
@@ -474,6 +479,17 @@ pub struct Question {
     variants: HashSet<AnswerVariant>
 }
 
+impl Question {
+
+    pub fn get_uuid(&self) -> &String {
+        &self.uuid
+    }
+
+    pub fn get_variants(&self) -> &HashSet<AnswerVariant> {
+        &self.variants
+    }
+}
+
 impl Hash for Question {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.uuid.hash(state)
@@ -488,11 +504,23 @@ impl PartialEq for Question {
 
 impl Eq for Question {}
 
+impl Borrow<String> for Question {
+    fn borrow(&self) -> &String {
+        &self.uuid
+    }
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnswerVariant {
     content: String,
     is_answer: bool
+}
+
+impl AnswerVariant {
+    pub fn get_answer_state(&self) -> bool {
+        self.is_answer
+    }
 }
 
 impl Hash for AnswerVariant {
@@ -508,6 +536,12 @@ impl PartialEq for AnswerVariant {
 }
 
 impl Eq for AnswerVariant {}
+
+impl Borrow<String> for AnswerVariant {
+    fn borrow(&self) -> &String {
+        &self.content
+    }
+}
 
 #[cfg(test)]
 mod tests {

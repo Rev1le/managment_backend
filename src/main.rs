@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::State;
 use tauri::WindowUrl::App;
-use management_core::{SchemaError, CoefficientScheme, Team, Skill, Vacancy, VacancyCoefficient, Job, Company, JobLevel};
+use management_core::{SchemaError, CoefficientScheme, Team, Skill, Vacancy, VacancyCoefficient, Job, Company, JobLevel, Question, AnswerVariant};
 
 #[derive(Debug)]
 pub enum AppError {
@@ -136,92 +136,70 @@ fn check_placement(app: State<'_, Mutex<ManagementApp>>, data: PlacementRequest)
         all_percentage += 1.0;
 
         println!("Company vacancy name: {}, target vacancy name: {}. Worker top vacancies: {:?}", company_vacancy_name, target_vacancy_name, worker_vacancies_top);
-
     }
 
     println!("{} / {}", percentage_correctness, all_percentage);
+    return percentage_correctness * 0.25 / all_percentage;
 
-    return percentage_correctness / all_percentage;
-
-
-/*
-
-        if let Some(current_company) = current_company_opt {
-        let vacancies_tree = current_company.tree();
-
-        let mut percentage_correctness = 0;
-        let mut all_percentage = 0;
-
-        for target_vacancy in vacancies_tree.get_iter() {
-
-            let (target_vacancy_name, company_vacancy_name) = target_vacancy.label().iter().next().unwrap();
-
-            let request_vacancy_company_data = data.placements
-                .get(company_vacancy_name).unwrap_or(&Value::Null);
-
-            if request_vacancy_company_data == Value::Null {
-                println!("Должность {} не найдена в RequestData", company_vacancy_name);
-                continue
-            }
-
-            let (request_vacancy_company_name, worker_data) = request_vacancy_company_data
-                .as_object()
-                .unwrap()
-                .iter()
-                .next()
-                .expect(&format!(
-                    "Должность {} не явялется валидной. Debug: {:?}",
-                    company_vacancy_name,
-                    request_vacancy_data)
-                );
-            let worker_vacancies_top = worker_data["vacancies"].as_array().unwrap();
-
-            let vacancy_name = target_vacancy.label().keys().next().unwrap();
-            let request_data_vacancies = data.placements.get(vacancy_name).unwrap().as_object().unwrap();
-
-            let request_vacancies = request_data_vacancies["vacancies"].as_array().unwrap();
-
-            for i in 0..=2 {
-                let best_vacancy = &request_vacancies[i];
-
-                if best_vacancy == label.label().values().next().unwrap() {
-                    percentage_correctness += 1/(1+i);
-                    break
-                }
-            }
-
-            all_percentage += 1;
-
-            // let best_vacancy = request_data_vacancies["vacancies"].as_array().unwrap()[0].as_str().unwrap();
-            //
-            // if best_vacancy == label.label().keys().next().unwrap() {
-            //     percentage_correctness += 1;
-            // }
-            // all_percentage += 1;
-
-            println!("{:?} -- {:#?}", label.label(), data);
-        }
-
-        println!("{} {}", percentage_correctness, all_percentage);
-
-        if percentage_correctness / all_percentage >= 0 {
-            return true
-        }
-    }
-
-    return false
-
- */
 }
 
-// #[tauri::command]
-// fn get_jobs(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Job> {
-//
-//     let schema = app.lock().unwrap();
-//     let jobs = schema.schema.get_jobs().clone();
-//
-//     return jobs;
-// }
+#[tauri::command]
+fn get_questions(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Question> {
+
+    let schema = app.lock().unwrap();
+    return schema.schema.get_questions().clone();
+
+}
+
+pub struct QuestionAnswerResponse {
+    question_uuid: String,
+    answers: Vec<String>
+}
+
+#[tauri::command]
+fn get_questions_answers(app: State<'_, Mutex<ManagementApp>>, answers: Vec<QuestionAnswerResponse>) -> f64 {
+
+    let schema = app.lock().unwrap();
+    let questions_target = schema.schema.get_questions();
+
+    let all_answer = answers.len();
+    let mut correct_count = 0;
+
+    for answer in answers {
+        let question_target = questions_target.get(&answer.question_uuid);
+        match question_target {
+            None => continue,
+            Some(question_target) => {
+
+                let question_target_variants = question_target.get_variants();
+
+                let result = answer.answers
+                    .iter()
+                    .fold(true, |res, answer| {
+                        let answer_res = question_target_variants
+                            .get(answer)
+                            .map_or(false, |a| a.get_answer_state());
+
+                        return match answer_res {
+                            true => res,
+                            false => false
+                        }
+
+                    });
+
+                println!("{}", result);
+
+                if result {
+                    correct_count += 1;
+                }
+            }
+        }
+
+    }
+
+    correct_count as f64 / all_answer as f64
+
+}
 
 #[tauri::command]
 fn get_companies(app: State<'_, Mutex<ManagementApp>>) -> Vec<String> {
@@ -327,7 +305,7 @@ mod tests {
     use std::path::Path;
     use std::sync::Mutex;
     use tauri::{Manager, State};
-    use crate::{check_placement, get_companies, get_current_company, get_vacancies_for_worker, ManagementApp, PlacementRequest, WorkerRequest};
+    use crate::{check_placement, get_companies, get_current_company, get_questions, get_questions_answers, get_vacancies_for_worker, ManagementApp, PlacementRequest, QuestionAnswerResponse, WorkerRequest};
 
     #[tauri::command]
     fn get_skills_ww(app: State<'_, Mutex<ManagementApp>>) -> i64 {
@@ -338,8 +316,6 @@ mod tests {
 
         let app = tauri::Builder::default()
             .setup(|app| {
-
-                println!("GFWGWGGWG");
 
                 app.manage(Mutex::new(ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap()));
 
@@ -367,10 +343,29 @@ mod tests {
                 let json = r#"{"company_name":"Консалтинг","placements":{"Ьизнес-аналитик":{"name":"jrwj","qualities":["Пунктуальность","Спокойствие"],"id":4,"vacancies":["Analytic","Technical_Support","Manager","Programmer","QA_Engineer","Team_Lead"]},"Управляющий партнёр":{"name":"j","qualities":["Исполнительность","Ответственность"],"id":1,"vacancies":["Analytic","Manager","Programmer","Team_Lead","QA_Engineer"]},"Ведущий программист":{"name":"t","qualities":["Внимательность","Исполнительность"],"id":0,"vacancies":["System_Admin","Analytic","Programmer","QA_Engineer","Team_Lead"]},"Консультант":{"name":"jrwj","qualities":["Пунктуальность","Спокойствие"],"id":4,"vacancies":["HR_Manager","Technical_Support","Manager","Programmer","QA_Engineer","Team_Lead"]}}}"#;
                 let placement = serde_json::from_str::<PlacementRequest>(json).unwrap();
 
-                println!(
-                    "Result get_jobs: {:?}",
-                    serde_json::to_string(&check_placement(man_app, placement, ))
-                );
+                // println!(
+                //     "Result get_jobs: {:?}",
+                //     serde_json::to_string(&check_placement(man_app, placement, ))
+                // );
+
+                let questions = get_questions(man_app.clone());
+                let mut question_iter = questions.iter();
+
+                let mut answers = vec![];
+
+                answers.push(QuestionAnswerResponse {
+                    question_uuid: question_iter.next().unwrap().get_uuid().clone(),
+                    answers: vec!["Да".into()],
+                });
+                answers.push(QuestionAnswerResponse {
+                    question_uuid: question_iter.next().unwrap().get_uuid().clone(),
+                    answers: vec!["Да".into()],
+                });
+
+                let res = get_questions_answers(man_app, answers);
+
+                println!("{}", res);
+
                 Ok(())
 
             })
