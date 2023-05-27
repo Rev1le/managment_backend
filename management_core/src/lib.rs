@@ -13,8 +13,9 @@ use std::ptr::Unique;
 use std::slice::Iter;
 use std::sync::{Arc, OnceLock, Weak as ArcWeak};
 use std::vec::IntoIter;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::ser::SerializeStruct;
+use uuid::Uuid;
 
 use serde_json::{Value, from_reader};
 
@@ -73,6 +74,7 @@ pub struct CoefficientScheme {
     skills: HashSet<Skill>,
     //jobs: HashSet<Job>,
     companies: HashSet<Company>,
+    questions: HashSet<Question>,
 }
 
 impl CoefficientScheme {
@@ -100,11 +102,15 @@ impl CoefficientScheme {
             CoefficientScheme::parse_companies(&json["jobs"]["companies"]);
         println!("Успешных парсинг компаний\n------------");
 
+        let questions = dbg!(CoefficientScheme::parse_questions(&json["questions"]));
+        println!("Успешных парсинг вопросов------------");
+
         return Ok(Self {
             vacancies,
             skills,
             //jobs,
-            companies
+            companies,
+            questions
         });
     }
 
@@ -196,16 +202,20 @@ impl CoefficientScheme {
             .into_iter()
             .map(|company| {
                 //println!("{}", job.1);
-                let company_graph = dbg!(
+                let company_graph =
                     serde_json::from_value::<JobLevel>(company.1.clone())
-                        .unwrap()
-                );
+                        .unwrap();
                 Company {
                     name: company.0.into(),
                     tree: company_graph
                 }
             })
             .collect::<HashSet<Company>>();
+    }
+
+    fn parse_questions(value: &Value) -> HashSet<Question> {
+        serde_json::from_value::<HashSet<Question>>(value.clone())
+            .expect("Пасинг вопрос произошел неудачно")
     }
 
     // Not use pls
@@ -451,6 +461,53 @@ impl Borrow<String> for Company {
         &self.name
     }
 }
+
+fn create_string_uuid() -> String {
+    Uuid::new_v4().to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Question {
+    #[serde(default = "create_string_uuid")]
+    uuid: String,
+    title: String,
+    variants: HashSet<AnswerVariant>
+}
+
+impl Hash for Question {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.uuid.hash(state)
+    }
+}
+
+impl PartialEq for Question {
+    fn eq(&self, other: &Self) -> bool {
+        self.title.eq(&other.title)
+    }
+}
+
+impl Eq for Question {}
+
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnswerVariant {
+    content: String,
+    is_answer: bool
+}
+
+impl Hash for AnswerVariant {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.content.hash(state)
+    }
+}
+
+impl PartialEq for AnswerVariant {
+    fn eq(&self, other: &Self) -> bool {
+        self.content.eq(&other.content)
+    }
+}
+
+impl Eq for AnswerVariant {}
 
 #[cfg(test)]
 mod tests {
