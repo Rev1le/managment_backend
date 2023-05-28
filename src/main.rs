@@ -281,6 +281,17 @@ fn get_vacancies_for_worker(
     };
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ResponseSaveAnswers {
+    question_uuid: String,
+    answer_result: bool
+}
+
+#[tauri::command]
+fn save_test(app: State<'_, Mutex<ManagementApp>>, answers: Vec<ResponseSaveAnswers>) {
+    println!("Данные для сохранения теста {:?}", answers);
+}
+
 fn main() {
 
     let management_app = ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap();
