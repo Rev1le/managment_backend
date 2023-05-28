@@ -290,12 +290,6 @@ struct AnswerResultRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct RequestSaveAnswers {
-    answers: Vec<AnswerResultRequest>,
-    name: String
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 struct AnswerResultResponse {
     question_title: String,
     answer_result: bool
@@ -311,8 +305,17 @@ struct ResponseSaveAnswers {
 struct AllSave(pub Vec<ResponseSaveAnswers>);
 
 #[tauri::command]
-fn save_test(app: State<'_, Mutex<ManagementApp>>, answers: RequestSaveAnswers) {
-    println!("Данные для сохранения теста {:?}", answers);
+fn save_test(
+    app: State<'_, Mutex<ManagementApp>>,
+    name: String,
+    test_results: Vec<AnswerResultRequest>,
+    vacancy_results: f64)
+{
+    println!("Имя студента {:?}", name);
+    println!("Данные для сохранения теста {:?}", test_results);
+    println!("Данные для сохранения навыков {:?}", vacancy_results);
+
+    return;
 
     let schema = &app.lock().unwrap().schema;
 
