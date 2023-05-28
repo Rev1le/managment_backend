@@ -6,6 +6,7 @@
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::f64::NAN;
 use std::fs::File;
 use std::path::Path;
 use std::sync::Mutex;
@@ -13,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::State;
 use tauri::WindowUrl::App;
-use management_core::{SchemaError, CoefficientScheme, Team, Skill, Vacancy, VacancyCoefficient, Job, Company, JobLevel, Question, AnswerVariant};
+use management_core::{SchemaError, CoefficientScheme,  Skill, Vacancy, VacancyCoefficient, Job, Company, JobLevel, Question, AnswerVariant};
 
 #[derive(Debug)]
 pub enum AppError {
@@ -32,8 +33,7 @@ impl From<SchemaError> for AppError {
 
 #[derive(Serialize)]
 pub struct ManagementApp {
-    schema: CoefficientScheme,
-    team: Mutex<Team>
+    schema: CoefficientScheme
 }
 
 impl ManagementApp {
@@ -42,8 +42,7 @@ impl ManagementApp {
         let config_f = File::open(config).unwrap();
 
         Ok(Self {
-            schema: CoefficientScheme::new(config_f)?,
-            team: Mutex::new(Team::new()),
+            schema: CoefficientScheme::new(config_f)?
         })
     }
 }
@@ -151,6 +150,7 @@ fn get_questions(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Question> {
 
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuestionAnswerResponse {
     question_uuid: String,
     answers: Vec<String>
@@ -293,7 +293,9 @@ fn main() {
             get_vacancies_for_worker,
             get_companies,
             check_placement,
-            get_current_company
+            get_current_company,
+            get_questions,
+            get_questions_answers,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
