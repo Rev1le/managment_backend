@@ -323,11 +323,25 @@ fn save_test(
     println!("Данные для сохранения теста {:?}", test_results);
     println!("Данные для сохранения навыков {:?}", vacancy_results);
 
-    *tmp.lock().unwrap() = Some(AllSave(vec![UserSaveResult {
+    let user_save_state = UserSaveResult {
         name,
         test_results,
         vacancy_results,
-    }]));
+    };
+
+
+    if let Ok(mut f) = fs::File::open("./result.json") {
+        let mut save_all: AllSave = serde_json::from_reader(&f).unwrap();
+        save_all.0.push(user_save_state);
+
+        f.write( &serde_json::to_vec(&save_all).unwrap()).unwrap();
+
+    } else {
+        let save_all = AllSave(vec![user_save_state]);
+        fs::write("./result.json", serde_json::to_vec(&save_all).unwrap()).unwrap();
+    }
+
+    //*tmp.lock().unwrap() = Some(save);
 
     return;
 
