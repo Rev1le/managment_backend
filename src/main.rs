@@ -350,7 +350,13 @@ fn save_test(
 #[tauri::command]
 fn get_saved_result(tmp: State<'_, Mutex<Option<AllSave>>>) -> AllSave {
 
-    return tmp.lock().unwrap().clone().unwrap();
+    return if let Ok(mut f) = fs::File::open("./result.json") {
+        let mut save_all: AllSave = serde_json::from_reader(&f).unwrap();
+        save_all
+
+    } else {
+        AllSave(vec![])
+    }
 }
 
 fn main() {
