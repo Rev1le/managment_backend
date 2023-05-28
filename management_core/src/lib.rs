@@ -212,6 +212,12 @@ impl CoefficientScheme {
     pub fn get_questions(&self) -> &HashSet<Question> {
         &self.questions
     }
+
+    pub fn get_question_by_uuid(&self, uuid: &String) -> Question {
+        let q = self.questions.get(&uuid.clone());
+
+        q.unwrap().clone()
+    }
 }
 
 #[cfg(test)]

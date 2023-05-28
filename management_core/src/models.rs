@@ -232,6 +232,10 @@ impl Question {
     pub fn get_variants(&self) -> &HashSet<AnswerVariant> {
         &self.variants
     }
+
+    pub fn get_title(&self) -> &String {
+        &self.title
+    }
 }
 
 impl Hash for Question {

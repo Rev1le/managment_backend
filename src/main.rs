@@ -7,7 +7,9 @@
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::f64::NAN;
+use std::fs;
 use std::fs::File;
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
@@ -282,14 +284,70 @@ fn get_vacancies_for_worker(
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ResponseSaveAnswers {
+struct AnswerResultRequest {
     question_uuid: String,
     answer_result: bool
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct RequestSaveAnswers {
+    answers: Vec<AnswerResultRequest>,
+    name: String
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct AnswerResultResponse {
+    question_title: String,
+    answer_result: bool
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ResponseSaveAnswers {
+    answers: Vec<AnswerResultResponse>,
+    name: String
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct AllSave(pub Vec<ResponseSaveAnswers>);
+
 #[tauri::command]
-fn save_test(app: State<'_, Mutex<ManagementApp>>, answers: Vec<ResponseSaveAnswers>) {
+fn save_test(app: State<'_, Mutex<ManagementApp>>, answers: RequestSaveAnswers) {
     println!("Данные для сохранения теста {:?}", answers);
+
+    let schema = &app.lock().unwrap().schema;
+
+    //let json_ser = serde_json::to_string(&answers).unwrap();
+
+    let resp = ResponseSaveAnswers {
+        answers: answers.answers.into_iter().map(|ans| {
+            AnswerResultResponse {
+                question_title: schema.get_question_by_uuid(&ans.question_uuid).get_title().clone(),
+                answer_result: ans.answer_result,
+            }
+        }).collect(),
+        name: answers.name
+    };
+
+    if let Ok(mut f) = fs::File::open("./result.json") {
+
+        let mut save_schema: AllSave = serde_json::from_reader(f).unwrap();
+        save_schema.0.push(resp);
+
+        fs::write("./result.json", &serde_json::to_string(&save_schema).unwrap().into_bytes()).unwrap();
+
+    } else {
+        let all = AllSave(vec![resp]);
+        fs::write(
+            "./result.json",
+            &serde_json::to_string(
+                &all
+            )
+                .unwrap()
+                .into_bytes()
+        ).unwrap();
+    }
+
+    ()
 }
 
 fn main() {
@@ -307,6 +365,8 @@ fn main() {
             get_current_company,
             get_questions,
             get_questions_answers,
+            save_test,
+            save_practica,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
