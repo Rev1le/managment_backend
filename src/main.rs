@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-
+use rand::seq::SliceRandom;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::f64::NAN;
@@ -12,6 +12,7 @@ use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::sync::Mutex;
+use rand::prelude::IteratorRandom;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::State;
@@ -148,7 +149,13 @@ fn check_placement(app: State<'_, Mutex<ManagementApp>>, data: PlacementRequest)
 fn get_questions(app: State<'_, Mutex<ManagementApp>>) -> HashSet<Question> {
 
     let schema = app.lock().unwrap();
-    return schema.schema.get_questions().clone();
+    let all_questions =  schema.schema.get_questions().clone();
+    let sample: Vec<&Question> = all_questions.iter()
+        .choose_multiple(&mut rand::thread_rng(), 15);
+
+    let d: Vec<_> = sample.iter().map(|q|(*q).clone()).collect();
+
+    return HashSet::from_iter(d.into_iter());
 
 }
 
@@ -334,7 +341,7 @@ fn save_test(
         let mut save_all: AllSave = serde_json::from_reader(&f).unwrap();
         save_all.0.push(user_save_state);
 
-        f.write( &serde_json::to_vec(&save_all).unwrap()).unwrap();
+        fs::write("./result.json", serde_json::to_vec(&save_all).unwrap()).unwrap();
 
     } else {
         let save_all = AllSave(vec![user_save_state]);

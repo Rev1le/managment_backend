@@ -1423,6 +1423,7 @@ name = "management"
 version = "0.0.0"
 dependencies = [
  "management_core",
+ "rand 0.8.5",
  "serde",
  "serde_json",
  "tauri",
