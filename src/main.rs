@@ -302,55 +302,41 @@ struct ResponseSaveAnswers {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct AllSave(pub Vec<ResponseSaveAnswers>);
+struct UserSaveResult {
+    name: String,
+    test_results: Option<Vec<AnswerResultRequest>>,
+    vacancy_results: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct AllSave(pub Vec<UserSaveResult>);
 
 #[tauri::command]
 fn save_test(
     app: State<'_, Mutex<ManagementApp>>,
+    tmp: State<'_, Mutex<Option<AllSave>>>,
     name: String,
-    test_results: Vec<AnswerResultRequest>,
-    vacancy_results: f64)
+    test_results: Option<Vec<AnswerResultRequest>>,
+    vacancy_results: Option<f64>)
 {
     println!("Имя студента {:?}", name);
     println!("Данные для сохранения теста {:?}", test_results);
     println!("Данные для сохранения навыков {:?}", vacancy_results);
 
+    *tmp.lock().unwrap() = Some(AllSave(vec![UserSaveResult {
+        name,
+        test_results,
+        vacancy_results,
+    }]));
+
     return;
 
-    let schema = &app.lock().unwrap().schema;
+}
 
-    //let json_ser = serde_json::to_string(&answers).unwrap();
+#[tauri::command]
+fn get_saved_result(tmp: State<'_, Mutex<Option<AllSave>>>) -> AllSave {
 
-    let resp = ResponseSaveAnswers {
-        answers: answers.answers.into_iter().map(|ans| {
-            AnswerResultResponse {
-                question_title: schema.get_question_by_uuid(&ans.question_uuid).get_title().clone(),
-                answer_result: ans.answer_result,
-            }
-        }).collect(),
-        name: answers.name
-    };
-
-    if let Ok(mut f) = fs::File::open("./result.json") {
-
-        let mut save_schema: AllSave = serde_json::from_reader(f).unwrap();
-        save_schema.0.push(resp);
-
-        fs::write("./result.json", &serde_json::to_string(&save_schema).unwrap().into_bytes()).unwrap();
-
-    } else {
-        let all = AllSave(vec![resp]);
-        fs::write(
-            "./result.json",
-            &serde_json::to_string(
-                &all
-            )
-                .unwrap()
-                .into_bytes()
-        ).unwrap();
-    }
-
-    ()
+    return tmp.lock().unwrap().clone().unwrap();
 }
 
 fn main() {
@@ -358,6 +344,7 @@ fn main() {
     let management_app = ManagementApp::new(Path::new("./skill_coefficients.json")).unwrap();
 
     tauri::Builder::default()
+        .manage(Mutex::new(None::<AllSave>))
         .manage(Mutex::new(management_app))
         .invoke_handler(tauri::generate_handler![
             get_skills,
@@ -369,7 +356,7 @@ fn main() {
             get_questions,
             get_questions_answers,
             save_test,
-            save_practica,
+            get_saved_result,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
